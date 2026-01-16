@@ -7,6 +7,8 @@ import (
 
 func AuthRoutes(r fiber.Router, h *handlers.Handlers) {
 	auth := r.Group("/auth")
-	auth.Post("/login", h.Auth.Login)
+
 	auth.Post("/register", h.Auth.Register)
+	auth.Post("/login", h.Auth.Login)
+	auth.Post("/refresh", h.Auth.RefreshToken)
 }
