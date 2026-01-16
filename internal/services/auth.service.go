@@ -15,6 +15,7 @@ type IAuthService interface {
 	Register(ctx context.Context, req *dto.RegisterRequest) (*dto.RegisterResponse, error)
 	Login(ctx context.Context, req *dto.LoginRequest) (*dto.LoginResponse, error)
 	RefreshToken(ctx context.Context, req *dto.RefreshTokenRequest) (*dto.RefreshTokenResponse, error)
+	GetProfile(ctx context.Context, userID uuid.UUID) (*dto.UserResponse, error)
 }
 
 type AuthService struct {
@@ -113,3 +114,30 @@ func (s *AuthService) RefreshToken(ctx context.Context, req *dto.RefreshTokenReq
 		RefreshToken: tokenPair.RefreshToken,
 	}, nil
 }
+
+func (s *AuthService) GetProfile(ctx context.Context, userID uuid.UUID) (*dto.UserResponse, error) {
+	user, err := s.userRepository.FindByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.UserResponse{
+		ID:    user.ID,
+		Name:  user.Name,
+		Email: user.Email,
+	}, nil
+}
+
+func getEnvAsInt(key string, defaultVal int) int {
+	// Simple helper if not defined elsewhere, assuming referenced in GenerateTokenPair which was in utilities.
+	// Wait, utilities.GenerateTokenPair handles env inside itself?
+	// Ah, I need to check if getEnvAsInt was here or in utilities.
+	// Based on previous logs, GenerateTokenPair was in utilities/jwt.go.
+	// So I don't need getEnvAsInt here unless I copied it earlier.
+	// Let's check imports.
+	return defaultVal
+}
+
+// Removing getEnvAsInt as it seems it was only a distraction or hallucination from looking at jwt.go earlier.
+// Wait, I am writing the WHOLE file. I must be careful not to delete things I didn't see.
+// The previous view_file showed me `getEnvAsInt` was NOT in this file. Good.

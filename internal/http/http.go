@@ -24,12 +24,14 @@ type API struct {
 
 func InitializeAPI(cfg *config.Config, h *handlers.Handlers, log zerolog.Logger) *API {
 	// This function would typically set up the API routes and handlers.
-	app := fiber.New(fiber.Config{
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
-		AppName:      "Filmix Backend",
-	})
+	fiberConfig := config.NewFiberConfig()
+	// Override basic timeouts if needed, or keep them in NewFiberConfig
+	fiberConfig.IdleTimeout = time.Minute
+	fiberConfig.ReadTimeout = 10 * time.Second
+	fiberConfig.WriteTimeout = 30 * time.Second
+	fiberConfig.AppName = "Filmix Backend"
+
+	app := fiber.New(fiberConfig)
 
 	app.Use(middleware.RequestLogger(cfg.Mode, log))
 
