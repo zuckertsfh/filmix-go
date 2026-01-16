@@ -1,6 +1,7 @@
 package http
 
 import (
+	"database/sql"
 	"os"
 	"os/signal"
 	"sync"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/rs/zerolog"
 	"github.com/senatroxx/filmix-backend/internal/config"
 	"github.com/senatroxx/filmix-backend/internal/http/handlers"
@@ -22,7 +24,7 @@ type API struct {
 	Wg     *sync.WaitGroup
 }
 
-func InitializeAPI(cfg *config.Config, h *handlers.Handlers, log zerolog.Logger) *API {
+func InitializeAPI(cfg *config.Config, h *handlers.Handlers, db *sql.DB, log zerolog.Logger) *API {
 	// This function would typically set up the API routes and handlers.
 	fiberConfig := config.NewFiberConfig()
 	// Override basic timeouts if needed, or keep them in NewFiberConfig
@@ -34,6 +36,19 @@ func InitializeAPI(cfg *config.Config, h *handlers.Handlers, log zerolog.Logger)
 	app := fiber.New(fiberConfig)
 
 	app.Use(middleware.RequestLogger(cfg.Mode, log))
+	app.Use(healthcheck.New(healthcheck.Config{
+		LivenessProbe: func(c *fiber.Ctx) bool {
+			return true
+		},
+		LivenessEndpoint: "/live",
+		ReadinessProbe: func(c *fiber.Ctx) bool {
+			if err := db.PingContext(c.Context()); err != nil {
+				return false
+			}
+			return true
+		},
+		ReadinessEndpoint: "/ready",
+	}))
 
 	api := app.Group("/api")
 	routes.SetupRoutes(api, h)
