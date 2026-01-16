@@ -1,0 +1,6 @@
+CREATE TABLE cinemas (
+    id UUID NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    logo_url VARCHAR(255) NOT NULL,
+    PRIMARY KEY(id)
+);

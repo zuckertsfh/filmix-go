@@ -1,0 +1,10 @@
+CREATE TABLE users (
+    id UUID NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role_id UUID NOT NULL,
+    PRIMARY KEY(id),
+    CONSTRAINT fk_users_roles FOREIGN KEY (role_id) REFERENCES roles(id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+);
