@@ -10,4 +10,5 @@ func SetupRoutes(r fiber.Router, h *handlers.Handlers) {
 	v1api := r.Group("/v1")
 
 	v1.AuthRoutes(v1api, h)
+	v1.MovieRoutes(v1api, h)
 }

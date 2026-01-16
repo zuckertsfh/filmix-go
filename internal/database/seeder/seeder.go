@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"math/rand"
 	"time"
 
 	"github.com/google/uuid"
@@ -33,6 +34,11 @@ func NewSeeder(db *sql.DB, cfg *config.Config) *Seeder {
 func (s *Seeder) SeedAll() error {
 	ctx := context.Background()
 
+	// Truncate all data first
+	if err := s.TruncateAll(ctx); err != nil {
+		return fmt.Errorf("failed to truncate data: %w", err)
+	}
+
 	if err := s.SeedReference(ctx); err != nil {
 		return fmt.Errorf("failed to seed reference data: %w", err)
 	}
@@ -49,6 +55,40 @@ func (s *Seeder) SeedAll() error {
 		return fmt.Errorf("failed to seed showtimes: %w", err)
 	}
 
+	return nil
+}
+
+func (s *Seeder) TruncateAll(ctx context.Context) error {
+	log.Println("Truncating all tables...")
+
+	query := `
+		TRUNCATE TABLE 
+			transaction_items,
+			transactions,
+			showtimes,
+			seats,
+			seat_pricing_overrides,
+			seat_pricings,
+			studios,
+			theaters,
+			cinemas,
+			genre_movie,
+			movies,
+			movie_genres,
+			movie_ratings,
+			movie_statuses,
+			users,
+			roles,
+			seat_type
+		CASCADE;
+	`
+
+	_, err := s.db.ExecContext(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	log.Println("All tables truncated.")
 	return nil
 }
 
@@ -233,22 +273,45 @@ func (s *Seeder) SeedMovies(ctx context.Context) error {
 		return err
 	}
 
-	// Get Status & Rating IDs
-	status, _ := s.repo.GetStatusByName(ctx, "Now Showing")
-	rating, _ := s.repo.GetRatingByName(ctx, "PG-13")
+	// Get all statuses and ratings for random selection
+	statusNames := []string{"Now Showing", "Coming Soon", "Ended"}
+	ratingNames := []string{"G", "PG", "PG-13", "R", "NC-17"}
 
-	if status == nil {
+	// Fetch all status IDs
+	var statuses []*entities.MovieStatus
+	for _, name := range statusNames {
+		st, _ := s.repo.GetStatusByName(ctx, name)
+		if st != nil {
+			statuses = append(statuses, st)
+		}
+	}
+
+	// Fetch all rating IDs
+	var ratings []*entities.MovieRating
+	for _, name := range ratingNames {
+		rt, _ := s.repo.GetRatingByName(ctx, name)
+		if rt != nil {
+			ratings = append(ratings, rt)
+		}
+	}
+
+	// Fallback if none found
+	if len(statuses) == 0 {
 		sid := uuid.New()
 		s.repo.CreateStatus(ctx, &entities.MovieStatus{ID: sid, Status: "Now Showing"})
-		status = &entities.MovieStatus{ID: sid}
+		statuses = append(statuses, &entities.MovieStatus{ID: sid})
 	}
-	if rating == nil {
+	if len(ratings) == 0 {
 		rid := uuid.New()
 		s.repo.CreateRating(ctx, &entities.MovieRating{ID: rid, Rating: "PG-13"})
-		rating = &entities.MovieRating{ID: rid}
+		ratings = append(ratings, &entities.MovieRating{ID: rid})
 	}
 
 	for _, m := range rawMovies {
+		// Randomly select status and rating
+		randomStatus := statuses[rand.Intn(len(statuses))]
+		randomRating := ratings[rand.Intn(len(ratings))]
+
 		movieID := uuid.New()
 		err := s.repo.CreateMovie(ctx, &entities.Movie{
 			ID:            movieID,
@@ -260,8 +323,8 @@ func (s *Seeder) SeedMovies(ctx context.Context) error {
 			TrailerURL:    "",  // Requires another call
 			Duration:      120, // List doesn't have runtime
 			Popularity:    int(m.Popularity),
-			MovieStatusID: status.ID,
-			MovieRatingID: rating.ID,
+			MovieStatusID: randomStatus.ID,
+			MovieRatingID: randomRating.ID,
 		})
 		if err != nil {
 			log.Printf("Failed to seed movie %s: %v", m.Title, err)
