@@ -336,8 +336,8 @@ func (s *Seeder) SeedMovies(ctx context.Context) error {
 func (s *Seeder) SeedShowtimes(ctx context.Context) error {
 	log.Println("Seeding showtimes...")
 
-	var studioID uuid.UUID
-	err := s.db.QueryRowContext(ctx, "SELECT id FROM studios LIMIT 1").Scan(&studioID)
+	var studioID, theaterID uuid.UUID
+	err := s.db.QueryRowContext(ctx, "SELECT id, theater_id FROM studios LIMIT 1").Scan(&studioID, &theaterID)
 	if err != nil {
 		return fmt.Errorf("no studio found")
 	}
@@ -370,6 +370,7 @@ func (s *Seeder) SeedShowtimes(ctx context.Context) error {
 				ID:            uuid.New(),
 				MovieID:       mid,
 				StudioID:      studioID,
+				TheaterID:     theaterID,
 				Time:          start,
 				ExpiredAt:     start.Add(2 * time.Hour),
 				SeatPricingID: pricingID,

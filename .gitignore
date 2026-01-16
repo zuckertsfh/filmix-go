@@ -11,3 +11,5 @@ tmp/
 
 # OS specific
 .DS_Store
+tmp/air.log
+tmp/main

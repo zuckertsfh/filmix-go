@@ -153,11 +153,11 @@ func (r *Repository) CreateMovie(ctx context.Context, movie *entities.Movie) err
 
 func (r *Repository) CreateShowtime(ctx context.Context, showtime *entities.Showtime) error {
 	query := `
-		INSERT INTO showtimes (id, movie_id, studio_id, time, expired_at, seat_pricing_id, status)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO showtimes (id, movie_id, studio_id, theater_id, time, expired_at, seat_pricing_id, status)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
 	_, err := r.db.ExecContext(ctx, query,
-		showtime.ID, showtime.MovieID, showtime.StudioID, showtime.Time, showtime.ExpiredAt, showtime.SeatPricingID, showtime.Status,
+		showtime.ID, showtime.MovieID, showtime.StudioID, showtime.TheaterID, showtime.Time, showtime.ExpiredAt, showtime.SeatPricingID, showtime.Status,
 	)
 	return err
 }
