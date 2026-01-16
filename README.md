@@ -39,6 +39,12 @@ Backend API for Filmix application, built with **Go** and **Fiber**.
     ```
     The server will start at `http://localhost:8080` (or the port defined in `.env`).
 
+5.  **Run with Live Reload (Optional)**
+    If you have `air` installed for hot-reloading:
+    ```bash
+    air
+    ```
+
 ---
 
 ## 🏗️ Project Structure & Flow
