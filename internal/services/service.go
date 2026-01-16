@@ -6,6 +6,7 @@ type Services struct {
 	AuthService     IAuthService
 	MovieService    IMovieService
 	ShowtimeService IShowtimeService
+	SeatService     ISeatService
 }
 
 func RegisterServices(r *repositories.Repositories) *Services {
@@ -13,5 +14,6 @@ func RegisterServices(r *repositories.Repositories) *Services {
 		AuthService:     NewAuthService(r.UserRepository),
 		MovieService:    NewMovieService(r.MovieRepository),
 		ShowtimeService: NewShowtimeService(r.ShowtimeRepository),
+		SeatService:     NewSeatService(r.SeatRepository, r.ShowtimeRepository),
 	}
 }

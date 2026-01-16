@@ -9,6 +9,7 @@ type Repositories struct {
 	MovieRepository    IMovieRepository
 	CinemaRepository   ICinemaRepository
 	ShowtimeRepository IShowtimeRepository
+	SeatRepository     ISeatRepository
 }
 
 func RegisterRepositories(db *sql.DB) *Repositories {
@@ -17,5 +18,6 @@ func RegisterRepositories(db *sql.DB) *Repositories {
 		MovieRepository:    NewMovieRepository(db),
 		CinemaRepository:   NewCinemaRepository(db),
 		ShowtimeRepository: NewShowtimeRepository(db),
+		SeatRepository:     NewSeatRepository(db),
 	}
 }
