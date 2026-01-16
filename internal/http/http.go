@@ -53,6 +53,11 @@ func InitializeAPI(cfg *config.Config, h *handlers.Handlers, db *sql.DB, log zer
 	api := app.Group("/api")
 	routes.SetupRoutes(api, h)
 
+	// Payment methods (needs direct DB access)
+	pmHandler := handlers.NewPaymentMethodHandler(db)
+	v1 := api.Group("/v1")
+	v1.Get("/payment-methods", middleware.Protected(), pmHandler.GetPaymentMethods)
+
 	return &API{
 		App:    app,
 		Config: cfg,

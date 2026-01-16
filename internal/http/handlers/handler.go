@@ -7,6 +7,7 @@ type Handlers struct {
 	Movie    *MovieHandler
 	Showtime *ShowtimeHandler
 	Seat     *SeatHandler
+	Booking  *BookingHandler
 }
 
 func RegisterHandlers(s *services.Services) *Handlers {
@@ -15,5 +16,6 @@ func RegisterHandlers(s *services.Services) *Handlers {
 		Movie:    NewMovieHandler(s.MovieService),
 		Showtime: NewShowtimeHandler(s.ShowtimeService),
 		Seat:     NewSeatHandler(s.SeatService),
+		Booking:  NewBookingHandler(s.BookingService),
 	}
 }

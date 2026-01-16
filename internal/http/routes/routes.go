@@ -13,4 +13,5 @@ func SetupRoutes(r fiber.Router, h *handlers.Handlers) {
 	v1.MovieRoutes(v1api, h)
 	v1.ShowtimeRoutes(v1api, h)
 	v1.SeatRoutes(v1api, h)
+	v1.BookingRoutes(v1api, h)
 }

@@ -79,7 +79,9 @@ func (s *Seeder) TruncateAll(ctx context.Context) error {
 			movie_statuses,
 			users,
 			roles,
-			seat_type
+			seat_type,
+			payment_methods,
+			payment_method_types
 		CASCADE;
 	`
 
@@ -106,6 +108,20 @@ func (s *Seeder) SeedReference(ctx context.Context) error {
 	for _, r := range ratings {
 		_ = s.repo.CreateRating(ctx, &entities.MovieRating{ID: uuid.New(), Rating: r})
 	}
+
+	// Payment Method Types
+	ewalletTypeID := uuid.New()
+	vaTypeID := uuid.New()
+	s.db.ExecContext(ctx, `INSERT INTO payment_method_types (id, name) VALUES ($1, $2) ON CONFLICT DO NOTHING`, ewalletTypeID, "E-Wallet")
+	s.db.ExecContext(ctx, `INSERT INTO payment_method_types (id, name) VALUES ($1, $2) ON CONFLICT DO NOTHING`, vaTypeID, "Virtual Account")
+
+	// Payment Methods
+	s.db.ExecContext(ctx, `INSERT INTO payment_methods (id, code, name, logo_url, active, payment_method_type_id) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING`,
+		uuid.New(), "GOPAY", "GoPay", "https://example.com/gopay.png", true, ewalletTypeID)
+	s.db.ExecContext(ctx, `INSERT INTO payment_methods (id, code, name, logo_url, active, payment_method_type_id) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING`,
+		uuid.New(), "OVO", "OVO", "https://example.com/ovo.png", true, ewalletTypeID)
+	s.db.ExecContext(ctx, `INSERT INTO payment_methods (id, code, name, logo_url, active, payment_method_type_id) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING`,
+		uuid.New(), "BCA_VA", "BCA Virtual Account", "https://example.com/bca.png", true, vaTypeID)
 
 	return nil
 }
