@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -24,24 +25,20 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
 	req := new(dto.RegisterRequest)
 
-	// Parse Body
 	if err := c.BodyParser(req); err != nil {
 		return utilities.NewErrorResponse(c, http.StatusBadRequest, "Invalid request body")
 	}
 
-	// TODO: Add Validator here
-	if req.Email == "" || req.Password == "" || req.Name == "" {
-		return utilities.NewErrorResponse(c, http.StatusBadRequest, "Missing required fields")
+	if errMsg := utilities.ValidateStruct(req); errMsg != "" {
+		return utilities.NewErrorResponse(c, http.StatusBadRequest, errMsg)
 	}
 
-	// Call Service
 	res, err := h.authService.Register(c.Context(), req)
 	if err != nil {
-		// Example error handling
-		if err.Error() == "email already registered" {
+		if errors.Is(err, services.ErrEmailAlreadyRegistered) {
 			return utilities.NewErrorResponse(c, http.StatusConflict, err.Error())
 		}
-		if err.Error() == "default role 'user' not found" {
+		if errors.Is(err, services.ErrRoleNotFound) {
 			return utilities.NewErrorResponse(c, http.StatusInternalServerError, "Role configuration error")
 		}
 		return utilities.NewErrorResponse(c, http.StatusInternalServerError, err.Error())

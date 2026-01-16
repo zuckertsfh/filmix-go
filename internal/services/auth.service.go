@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"errors"
 
 	"github.com/google/uuid"
 	"github.com/senatroxx/filmix-backend/internal/database/entities"
@@ -24,25 +23,21 @@ func NewAuthService(userRepo repositories.IUserRepository) IAuthService {
 }
 
 func (s *AuthService) Register(ctx context.Context, req *dto.RegisterRequest) (*dto.RegisterResponse, error) {
-	// 1. Check if email exists
 	existingUser, _ := s.userRepository.FindByEmail(ctx, req.Email)
 	if existingUser != nil {
-		return nil, errors.New("email already registered")
+		return nil, ErrEmailAlreadyRegistered
 	}
 
-	// 2. Hash Password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
 	}
 
-	// 3. Fetch default 'user' role
 	userRole, err := s.userRepository.GetRoleByName(ctx, "user")
 	if err != nil {
-		return nil, errors.New("default role 'user' not found")
+		return nil, ErrRoleNotFound
 	}
 
-	// 4. Create User Entity
 	newUser := &entities.User{
 		ID:       uuid.New(),
 		Name:     req.Name,
