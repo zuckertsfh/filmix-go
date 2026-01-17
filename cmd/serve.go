@@ -22,7 +22,7 @@ var serveCmd = &cobra.Command{
 		defer db.Close()
 
 		hr := config.InitializeHandlers(config.InitializeServices(config.InitializeRepositories(db)))
-		srv := http.InitializeAPI(&cfg, hr, utilities.Logger)
+		srv := http.InitializeAPI(&cfg, hr, db, utilities.Logger)
 		srv.Run()
 	},
 }

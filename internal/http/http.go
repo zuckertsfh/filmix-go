@@ -1,6 +1,7 @@
 package http
 
 import (
+	"database/sql"
 	"os"
 	"os/signal"
 	"sync"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/rs/zerolog"
 	"github.com/senatroxx/filmix-backend/internal/config"
 	"github.com/senatroxx/filmix-backend/internal/http/handlers"
@@ -22,19 +24,39 @@ type API struct {
 	Wg     *sync.WaitGroup
 }
 
-func InitializeAPI(cfg *config.Config, h *handlers.Handlers, log zerolog.Logger) *API {
+func InitializeAPI(cfg *config.Config, h *handlers.Handlers, db *sql.DB, log zerolog.Logger) *API {
 	// This function would typically set up the API routes and handlers.
-	app := fiber.New(fiber.Config{
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
-		AppName:      "Filmix Backend",
-	})
+	fiberConfig := config.NewFiberConfig()
+	// Override basic timeouts if needed, or keep them in NewFiberConfig
+	fiberConfig.IdleTimeout = time.Minute
+	fiberConfig.ReadTimeout = 10 * time.Second
+	fiberConfig.WriteTimeout = 30 * time.Second
+	fiberConfig.AppName = "Filmix Backend"
+
+	app := fiber.New(fiberConfig)
 
 	app.Use(middleware.RequestLogger(cfg.Mode, log))
+	app.Use(healthcheck.New(healthcheck.Config{
+		LivenessProbe: func(c *fiber.Ctx) bool {
+			return true
+		},
+		LivenessEndpoint: "/live",
+		ReadinessProbe: func(c *fiber.Ctx) bool {
+			if err := db.PingContext(c.Context()); err != nil {
+				return false
+			}
+			return true
+		},
+		ReadinessEndpoint: "/ready",
+	}))
 
 	api := app.Group("/api")
 	routes.SetupRoutes(api, h)
+
+	// Payment methods (needs direct DB access)
+	pmHandler := handlers.NewPaymentMethodHandler(db)
+	v1 := api.Group("/v1")
+	v1.Get("/payment-methods", middleware.Protected(), pmHandler.GetPaymentMethods)
 
 	return &API{
 		App:    app,

@@ -39,6 +39,12 @@ Backend API for Filmix application, built with **Go** and **Fiber**.
     ```
     The server will start at `http://localhost:8080` (or the port defined in `.env`).
 
+5.  **Run with Live Reload (Optional)**
+    If you have `air` installed for hot-reloading:
+    ```bash
+    air
+    ```
+
 ---
 
 ## 🏗️ Project Structure & Flow
@@ -95,5 +101,46 @@ When adding a new feature (e.g., "Add Comment"), work **Inside-Out**:
 3.  **Service**: Create `CommentService` to handle business logic.
 4.  **Handler**: Create `CommentHandler` to parse input.
 5.  **Route**: Register the endpoint in `routes`.
+
+---
+
+## 🎬 Business Flow (MVP)
+
+```mermaid
+flowchart LR
+    A[Login] --> B[See Movies]
+    B --> C[See Schedule & Theater]
+    C --> D[Select Seats]
+    D --> E[Payment]
+    E --> F[E-Ticket]
+```
+
+---
+
+## 🗄️ Database Schema
+
+```mermaid
+erDiagram
+    users ||--o{ transactions : "makes"
+    movies ||--o{ showtimes : "has"
+    cinemas ||--o{ theaters : "owns"
+    theaters ||--o{ studios : "contains"
+    studios ||--o{ seats : "has"
+    studios ||--o{ showtimes : "hosts"
+    showtimes ||--o{ transactions : "booked_for"
+    transactions ||--o{ transaction_items : "contains"
+    seats ||--o{ transaction_items : "reserved_in"
+    payment_methods ||--o{ transactions : "used_in"
+```
+
+### Entity Coverage
+
+| Flow Step | Entities |
+|-----------|----------|
+| **Auth** | `users`, `roles` |
+| **Movies** | `movies`, `movie_statuses`, `movie_ratings`, `movie_genres` |
+| **Location** | `cinemas` → `theaters` → `studios` → `seats` |
+| **Schedule** | `showtimes` (links movie + studio + pricing) |
+| **Booking** | `transactions`, `transaction_items`, `payment_methods` |
 
 ---
