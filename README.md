@@ -144,3 +144,155 @@ erDiagram
 | **Booking** | `transactions`, `transaction_items`, `payment_methods` |
 
 ---
+
+## 📡 API Documentation
+
+### Quick Setup
+```bash
+# Get auth token (save for subsequent requests)
+export TOKEN=$(curl -s -X POST http://localhost:3000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@filmix.com", "password": "password"}' | jq -r '.data.access_token')
+```
+
+---
+
+### 🔐 Authentication
+
+#### Register
+```bash
+curl -X POST http://localhost:3000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name": "John Doe", "email": "john@example.com", "password": "password123"}'
+```
+```json
+{ "code": 201, "message": "User registered successfully", "data": { "id": "uuid", "name": "John Doe", "email": "john@example.com" } }
+```
+
+#### Login
+```bash
+curl -X POST http://localhost:3000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@filmix.com", "password": "password"}'
+```
+```json
+{ "code": 200, "data": { "access_token": "...", "refresh_token": "...", "id": "uuid", "name": "User", "email": "user@filmix.com" } }
+```
+
+#### Get Profile
+```bash
+curl http://localhost:3000/api/v1/auth/me -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+### 🎬 Movies
+
+#### List Movies (Paginated)
+```bash
+curl "http://localhost:3000/api/v1/movies?page=1&limit=10" -H "Authorization: Bearer $TOKEN"
+```
+
+#### Now Playing
+```bash
+curl "http://localhost:3000/api/v1/movies/now-playing?page=1&limit=10" -H "Authorization: Bearer $TOKEN"
+```
+
+#### Get Movie Detail
+```bash
+curl http://localhost:3000/api/v1/movies/{MOVIE_ID} -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+### 🕐 Showtimes
+
+#### Showtimes by Movie
+```bash
+curl "http://localhost:3000/api/v1/movies/{MOVIE_ID}/showtimes" -H "Authorization: Bearer $TOKEN"
+```
+
+#### Showtimes by Theater
+```bash
+curl "http://localhost:3000/api/v1/theaters/{THEATER_ID}/showtimes" -H "Authorization: Bearer $TOKEN"
+```
+
+#### Get Showtime Detail
+```bash
+curl http://localhost:3000/api/v1/showtimes/{SHOWTIME_ID} -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+### 💺 Seats
+
+#### Get Seats for Showtime (with availability)
+```bash
+curl http://localhost:3000/api/v1/showtimes/{SHOWTIME_ID}/seats -H "Authorization: Bearer $TOKEN"
+```
+```json
+{ "code": 200, "data": [{ "id": "uuid", "row": "A", "number": 1, "seat_type": { "name": "Standard" }, "is_booked": false }] }
+```
+
+---
+
+### 💳 Payment Methods
+
+```bash
+curl http://localhost:3000/api/v1/payment-methods -H "Authorization: Bearer $TOKEN"
+```
+```json
+{ "code": 200, "data": [{ "id": "uuid", "code": "GOPAY", "name": "GoPay", "logo_url": "..." }] }
+```
+
+---
+
+### 🎫 Bookings
+
+#### Create Booking
+```bash
+curl -X POST http://localhost:3000/api/v1/bookings \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "showtime_id": "SHOWTIME_UUID",
+    "seat_ids": ["SEAT_UUID_1", "SEAT_UUID_2"],
+    "payment_method_id": "PAYMENT_METHOD_UUID"
+  }'
+```
+```json
+{
+  "code": 201,
+  "data": {
+    "id": "uuid",
+    "status": "pending",
+    "invoice_number": "INV-abc123",
+    "amount": 100000,
+    "expired_at": "2026-01-17T20:00:00Z",
+    "showtime": { "id": "...", "time": "...", "movie": { "title": "Avatar" } },
+    "theater": { "name": "Theater 1" },
+    "seats": [{ "row": "A", "number": 1, "seat_type": "Standard", "price": 50000 }]
+  }
+}
+```
+
+#### List My Bookings
+```bash
+curl http://localhost:3000/api/v1/bookings -H "Authorization: Bearer $TOKEN"
+```
+
+#### Get Booking Detail
+```bash
+curl http://localhost:3000/api/v1/bookings/{BOOKING_ID} -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+### 🏥 Health Check
+
+```bash
+curl http://localhost:3000/live   # Liveness
+curl http://localhost:3000/ready  # Readiness (DB check)
+```
+
+---
